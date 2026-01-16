@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik-config.yml:/etc/traefik/traefik.yml:ro"
+    networks:
+      - web
+
+  wordcreator:
+    build: .
+    container_name: wordcreator-app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wordcreator.rule=PathPrefix(`/wordcreator`)"
+      - "traefik.http.routers.wordcreator.entrypoints=web"
+      - "traefik.http.services.wordcreator.loadbalancer.server.port=8080"
+      # УДАЛИТЕ эти строки или измените:
+      # - "traefik.http.middlewares.stripprefix.stripprefix.prefixes=/wordcreator"
+      # - "traefik.http.routers.wordcreator.middlewares=stripprefix"
+    environment:
+      - SERVER_SERVLET_CONTEXT_PATH=/wordcreator  # ← ИЗМЕНИТЕ на /wordcreator!
+      - SPRING_PROFILES_ACTIVE=prod
+    networks:
+      - web
+
+networks:
+  web:
+    external: true

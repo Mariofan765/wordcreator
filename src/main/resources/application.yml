@@ -1,0 +1,19 @@
+server:
+  servlet:
+    context-path: /wordcreator
+  forward-headers-strategy: framework
+  tomcat:
+    use-relative-redirects: true
+
+spring:
+  profiles:
+    active: dev
+  application:
+    name: wordcreator
+  web:
+    resources:
+      add-mappings: true
+vaadin:
+  launch-browser: true
+
+

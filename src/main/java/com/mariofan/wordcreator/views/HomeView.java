@@ -38,41 +38,7 @@ public class HomeView extends VerticalLayout {
         Div form = new Div();
         Input input = setInput();
         Button button = setButton();
-
-        button.addClickListener(e -> {
-            try {
-                byte[] data = wordCreateService.createWord(input.getValue());
-
-                StreamResource resource = new StreamResource(
-                        "word.docx",
-                        () -> new ByteArrayInputStream(data)
-                );
-
-                // Создаем новую кнопку для скачивания
-                Button downloadButton = new Button("Скачать Word");
-                Anchor downloadLink = new Anchor(resource, "");
-                downloadLink.getElement().setAttribute("download", true);
-                downloadLink.add(downloadButton);
-
-                // Очищаем форму и показываем результат
-                form.removeAll();
-                form.add(input, downloadLink);
-
-                // Можно добавить кнопку для возврата к форме
-                Button backButton = new Button("Создать новый документ",
-                        event -> {
-                            form.removeAll();
-                            form.add(input, button);
-                        });
-                form.add(backButton);
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                // Добавьте обработку ошибки для пользователя
-                Notification.show("Ошибка при создании документа");
-            }
-        });
-
+        button.addClickListener(e -> wordCreateService.addDownload(form, input, button));
         form.add(input, button);
         return form;
     }

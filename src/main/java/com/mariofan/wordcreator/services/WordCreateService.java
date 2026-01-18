@@ -6,36 +6,112 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Input;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.server.StreamResource;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.ss.usermodel.FontFamily;
+import org.apache.poi.wp.usermodel.HeaderFooterType;
+import org.apache.poi.xwpf.usermodel.*;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Instant;
+import java.util.List;
+
 
 @Service
 public class WordCreateService {
 
-    public byte[] createWord(String text) throws IOException {
+    public byte[] createWord() throws IOException {
+        try (XWPFDocument doc = new XWPFDocument();
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            doc.write(baos);
+            return baos.toByteArray();
+        }
+    }
+
+    public byte[] createWord(List<ElementDto> values) throws IOException {
         try (XWPFDocument doc = new XWPFDocument();
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
-            XWPFParagraph paragraph = doc.createParagraph();
-            XWPFRun run = paragraph.createRun();
-            run.setText(text);
+            for (ElementDto element : values) {
+                switch (element.getType()) {
+                    case HEADER -> generateHeader(element, doc);
+                    case BODY -> generateBody(element, doc);
+                    case FOOTER -> generateFooter(element, doc);
+                    default -> throw new IllegalArgumentException("Invalid element");
+                }
+            }
 
             doc.write(baos);
             return baos.toByteArray();
         }
     }
 
-    public void addDownload(Div form, Input value, Button button) {
+    private XWPFHeader generateHeader(ElementDto element, XWPFDocument doc) {
+        XWPFHeader header = setHeaderType(element, doc);
+
+        XWPFParagraph paragraph = setHeaderAlignment(element, header);
+
+        setHeaderValue(element, paragraph);
+
+        return header;
+    }
+
+    private XWPFHeader setHeaderType(ElementDto element, XWPFDocument doc) {
+        HeaderFooterType headerType = switch (element.getTypePosition()) {
+            case FIRST -> HeaderFooterType.FIRST;
+            case EVEN -> HeaderFooterType.EVEN;
+            case DEFAULT -> HeaderFooterType.DEFAULT;
+        };
+        if (headerType != null) {
+            return doc.createHeader(headerType);
+        }
+        throw new IllegalArgumentException("Unknown element type position: " + element.getTypePosition());
+    }
+
+    private XWPFParagraph setHeaderAlignment(ElementDto element, XWPFHeader header) {
+        XWPFParagraph paragraph = header.createParagraph();
+        switch (element.getAlignment()) {
+            case LEFT -> paragraph.setAlignment(ParagraphAlignment.LEFT);
+            case CENTER ->paragraph.setAlignment(ParagraphAlignment.CENTER);
+            case RIGHT -> paragraph.setAlignment(ParagraphAlignment.RIGHT);
+            default -> throw new IllegalArgumentException("Invalid alignment position: " + element.getAlignment());
+        }
+        return paragraph;
+    }
+
+    private void setHeaderValue(ElementDto element, XWPFParagraph paragraph) {
+        XWPFRun run = paragraph.createRun();
+        run.setFontSize(
+                element.getFontSize() == null ? 16 : element.getFontSize()
+        );
+        run.setFontFamily(
+                element.getFontFamily() == null ? "Times New Roman" : element.getFontFamily()
+        );
+        switch (element.getFontStyle()) {
+            case BOLD -> run.setBold(true);
+            case ITALIC -> run.setItalic(true);
+            case BOLD_ITALIC -> {
+                run.setItalic(true);
+                run.setBold(true);
+            }
+            case NORMAL -> {}
+            default -> throw new IllegalArgumentException("Invalid font style: " + element.getFontStyle());
+        }
+        run.setText(element.getValue());
+    }
+
+    private void generateBody(ElementDto element, XWPFDocument doc) {
+    }
+
+    private void generateFooter(ElementDto element, XWPFDocument doc) {
+    }
+
+    public void addDownload(Div form, Input value, Button button, String fileName, byte[] file) {
         try {
-            byte[] data = createWord(value.getValue());
+            byte[] data = file;
             StreamResource resource = new StreamResource(
-                    "word.docx",
+                    fileName == null ? "word_" + Instant.now() + ".docx" : fileName,
                     () -> new ByteArrayInputStream(data)
             );
 

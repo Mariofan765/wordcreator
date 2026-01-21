@@ -5,10 +5,4 @@ public enum Type {
     FOOTER,
     BODY;
 
-
-    public enum TypePosition {
-        FIRST,
-        DEFAULT,
-        EVEN
-    }
 }

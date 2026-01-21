@@ -9,6 +9,7 @@ import com.vaadin.flow.server.StreamResource;
 import org.apache.poi.ss.usermodel.FontFamily;
 import org.apache.poi.wp.usermodel.HeaderFooterType;
 import org.apache.poi.xwpf.usermodel.*;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTP;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -71,11 +72,11 @@ public class WordCreateService {
 
     private XWPFParagraph setHeaderAlignment(ElementDto element, XWPFHeader header) {
         XWPFParagraph paragraph = header.createParagraph();
-        switch (element.getAlignment()) {
+        switch (element.getAlignmentElement()) {
             case LEFT -> paragraph.setAlignment(ParagraphAlignment.LEFT);
             case CENTER ->paragraph.setAlignment(ParagraphAlignment.CENTER);
             case RIGHT -> paragraph.setAlignment(ParagraphAlignment.RIGHT);
-            default -> throw new IllegalArgumentException("Invalid alignment position: " + element.getAlignment());
+            default -> throw new IllegalArgumentException("Invalid alignment position: " + element.getAlignmentElement());
         }
         return paragraph;
     }
@@ -102,6 +103,16 @@ public class WordCreateService {
     }
 
     private void generateBody(ElementDto element, XWPFDocument doc) {
+        XWPFParagraph paragraph = doc.createParagraph();
+        XWPFParagraph paragraph1 = doc.createParagraph();
+
+        paragraph.createRun().setText("0");
+        paragraph1.createRun().setText("1");
+
+
+        doc.setParagraph(paragraph, 1);
+        doc.setParagraph(paragraph1, 0);
+
     }
 
     private void generateFooter(ElementDto element, XWPFDocument doc) {

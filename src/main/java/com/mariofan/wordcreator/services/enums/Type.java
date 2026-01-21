@@ -4,5 +4,4 @@ public enum Type {
     HEADER,
     FOOTER,
     BODY;
-
 }

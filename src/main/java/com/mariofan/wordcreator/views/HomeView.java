@@ -6,6 +6,7 @@ import com.mariofan.wordcreator.services.enums.AlignmentElement;
 import com.mariofan.wordcreator.services.enums.FontStyle;
 import com.mariofan.wordcreator.services.enums.Type;
 import com.mariofan.wordcreator.services.enums.TypePosition;
+import com.mariofan.wordcreator.services.RadioButtonGroupCustomFunc;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
@@ -16,19 +17,20 @@ import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.router.Route;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 @Route("")
 public class HomeView extends VerticalLayout {
 
     private final WordCreateService wordCreateService;
+    private final RadioButtonGroupCustomFunc radioButtonGroupCustom;
 
-    public HomeView(WordCreateService wordCreateService) throws IOException {
+
+    public HomeView(WordCreateService wordCreateService, RadioButtonGroupCustomFunc radioButtonGroupCustom) throws IOException {
         this.wordCreateService = wordCreateService;
+        this.radioButtonGroupCustom = radioButtonGroupCustom;
         setPageStyle();
         add(setForm());
-
-
     }
 
     private void setPageStyle() {
@@ -43,15 +45,14 @@ public class HomeView extends VerticalLayout {
         Input input = setInput(form);
         Button button = setButton(form);
 
-        RadioButtonGroup<Type> radioButtonGroup = new RadioButtonGroup<>();
-        radioButtonGroup.setLabel("ZOV");
-        radioButtonGroup.setItems(Type.BODY, Type.HEADER, Type.FOOTER);
-        RadioButtonGroup<TypePosition> radioButtonGroupT = new RadioButtonGroup<>();
-        radioButtonGroupT.setLabel("GOYDA");
-        radioButtonGroupT.setItems(TypePosition.DEFAULT, TypePosition.EVEN, TypePosition.FIRST);
+        RadioButtonGroup<Type> radioButtonGroup = radioButtonGroupCustom.setRadioButtonGroup("Тип", Type.values());
+        RadioButtonGroup<TypePosition> radioButtonGroupT = radioButtonGroupCustom.setRadioButtonGroup("Расположение колонтитула", TypePosition.values());
+        RadioButtonGroup<AlignmentElement> radioButtonGroupA = radioButtonGroupCustom.setRadioButtonGroup("Выравнивание", AlignmentElement.values());
+        RadioButtonGroup<FontStyle> radioButtonGroupF = radioButtonGroupCustom.setRadioButtonGroup("Стиль шрифта", FontStyle.values());
+        RadioButtonGroup<String> radioButtonGroupS = radioButtonGroupCustom.setRadioButtonGroup("Стиль шрифта", "ROBOT", "ARIAL", "TIMES NEW ROMAN");
 
         input.addFocusListener(e -> {
-            form.add(radioButtonGroup, radioButtonGroupT);
+            form.add(radioButtonGroup, radioButtonGroupT, radioButtonGroupA,radioButtonGroupF, radioButtonGroupS);
         });
         button.addClickListener(e -> {
             ElementDto elementDto = new ElementDto();
@@ -89,5 +90,4 @@ public class HomeView extends VerticalLayout {
         button.getElement().setAttribute("width", "100%");
         return button;
     }
-
 }

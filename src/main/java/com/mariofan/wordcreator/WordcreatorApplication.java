@@ -13,3 +13,4 @@ public class WordcreatorApplication implements AppShellConfigurator {
         SpringApplication.run(WordcreatorApplication.class, args);
     }
 }
+
